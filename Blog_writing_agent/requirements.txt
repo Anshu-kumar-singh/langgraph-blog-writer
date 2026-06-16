@@ -1,0 +1,21 @@
+# Core LangGraph / LangChain
+langgraph
+langchain
+langchain-core
+langchain-openai
+langchain-community        # TavilySearchResults
+
+# LLM providers
+openai                     # ChatOpenAI backend
+google-genai               # Gemini image generation (_gemini_generate_image_bytes)
+
+# Web search (research node)
+tavily-python              # used via langchain_community TavilySearchResults
+
+# Data / utils
+pydantic
+pandas
+python-dotenv
+
+# Frontend
+streamlit
