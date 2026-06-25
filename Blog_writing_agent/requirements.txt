@@ -2,15 +2,17 @@
 langgraph
 langchain
 langchain-core
-langchain-openai
+langchain-groq             # ChatGroq (replaces langchain-openai)
 langchain-community        # TavilySearchResults
 
-# LLM providers
-openai                     # ChatOpenAI backend
-google-genai               # Gemini image generation (_gemini_generate_image_bytes)
-
 # Web search (research node)
-tavily-python              # used via langchain_community TavilySearchResults
+tavily-python
+langchain-tavily           # TavilySearchResults bridge (required in LangChain >= 0.3)
+
+# LLM providers
+groq                       # transitive dep of langchain-groq but explicit is safer
+requests                   # HuggingFace Inference API image generation
+dnspython                  # DNS resolver patch for Python 3.14 Windows bug
 
 # Data / utils
 pydantic
