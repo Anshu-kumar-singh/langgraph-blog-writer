@@ -55,21 +55,16 @@ def try_stream(graph_app, inputs: Dict[str, Any]) -> Iterator[Tuple[str, Any]]:
     """
     Stream graph progress if available; else invoke.
     Yields ("updates"/"values"/"final", payload).
+    stream_mode="values" yields full state snapshots, so last step = full final state.
     """
     try:
-        for step in graph_app.stream(inputs, stream_mode="updates"):
-            yield ("updates", step)
-        out = graph_app.invoke(inputs)
-        yield ("final", out)
-        return
-    except Exception:
-        pass
-
-    try:
+        last_state = None
         for step in graph_app.stream(inputs, stream_mode="values"):
             yield ("values", step)
-        out = graph_app.invoke(inputs)
-        yield ("final", out)
+            last_state = step  # each step is the FULL state snapshot
+        # last_state is the complete final state — no re-invoke needed
+        if last_state is not None:
+            yield ("final", last_state)
         return
     except Exception:
         pass
@@ -145,11 +140,11 @@ def render_markdown_with_local_images(md: str):
                     parts[i + 1] = ("md", rest)
 
         if src.startswith("http://") or src.startswith("https://"):
-            st.image(src, caption=caption or (alt or None), use_container_width=True)
+            st.image(src, caption=caption or (alt or None), width='stretch')
         else:
             img_path = _resolve_image_path(src)
             if img_path.exists():
-                st.image(str(img_path), caption=caption or (alt or None), use_container_width=True)
+                st.image(str(img_path), caption=caption or (alt or None), width='stretch')
             else:
                 st.warning(f"Image not found: `{src}` (looked for `{img_path}`)")
 
@@ -292,25 +287,18 @@ if run_btn:
     progress_area = st.empty()
 
     current_state: Dict[str, Any] = {}
-    last_node = None
 
     for kind, payload in try_stream(app, inputs):
-        if kind in ("updates", "values"):
-            node_name = None
-            if isinstance(payload, dict) and len(payload) == 1 and isinstance(next(iter(payload.values())), dict):
-                node_name = next(iter(payload.keys()))
-            if node_name and node_name != last_node:
-                status.write(f"➡️ Node: `{node_name}`")
-                last_node = node_name
-
-            current_state = extract_latest_state(current_state, payload)
+        if kind == "values":
+            # payload is the full state snapshot; update current_state directly
+            current_state = payload
 
             summary = {
                 "mode": current_state.get("mode"),
                 "needs_research": current_state.get("needs_research"),
                 "queries": current_state.get("queries", [])[:5] if isinstance(current_state.get("queries"), list) else [],
                 "evidence_count": len(current_state.get("evidence", []) or []),
-                "tasks": len((current_state.get("plan") or {}).get("tasks", [])) if isinstance(current_state.get("plan"), dict) else None,
+                "tasks": len(current_state["plan"].tasks) if hasattr(current_state.get("plan"), "tasks") else len((current_state.get("plan") or {}).get("tasks", [])) if isinstance(current_state.get("plan"), dict) else None,
                 "images": len(current_state.get("image_specs", []) or []),
                 "sections_done": len(current_state.get("sections", []) or []),
             }
@@ -319,6 +307,7 @@ if run_btn:
             log(f"[{kind}] {json.dumps(payload, default=str)[:1200]}")
 
         elif kind == "final":
+            # payload is a full state snapshot (values mode) or invoke result
             out = payload
             st.session_state["last_out"] = out
             status.update(label="✅ Done", state="complete", expanded=False)
@@ -363,7 +352,7 @@ if out:
                         for t in tasks
                     ]
                 ).sort_values("id")
-                st.dataframe(df, use_container_width=True, hide_index=True)
+                st.dataframe(df, width='stretch', hide_index=True)
 
                 with st.expander("Task details"):
                     st.json(tasks)
@@ -387,7 +376,7 @@ if out:
                         "url": e.get("url"),
                     }
                 )
-            st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+            st.dataframe(pd.DataFrame(rows), width='stretch', hide_index=True)
 
     # --- Preview tab ---
     with tab_preview:
@@ -442,7 +431,7 @@ if out:
                     st.warning("images/ exists but is empty.")
                 else:
                     for p in sorted(files):
-                        st.image(str(p), caption=p.name, use_container_width=True)
+                        st.image(str(p), caption=p.name, width='stretch')
 
                 z = images_zip(images_dir)
                 if z:
