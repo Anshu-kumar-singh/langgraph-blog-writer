@@ -2,6 +2,8 @@
 
 An AI-powered multi-agent blog generation system built with **LangGraph**, **LangChain**, and **Streamlit**.
 
+🚀 **Live Demo:** https://anshu908-blog-writing-agent.hf.space
+
 This project automatically generates structured, research-backed blog posts using a graph-based orchestration workflow. It can:
 
 * Plan blog structure
@@ -11,6 +13,16 @@ This project automatically generates structured, research-backed blog posts usin
 * Decide where images are needed
 * Generate AI image prompts and placeholders
 * Export blogs with images
+
+---
+
+# Live Demo
+
+🌐 **Try the application here:**
+
+**https://anshu908-blog-writing-agent.hf.space**
+
+No installation required—simply open the link and start generating AI-powered blogs.
 
 ---
 
@@ -213,7 +225,7 @@ Handles:
 
 ## 6. Image Pipeline
 
-The image pipeline works in 3 stages:
+The image pipeline works in 3 stages.
 
 ### merge_content
 
@@ -314,7 +326,17 @@ GOOGLE_API_KEY=your_google_key
 
 # Running the Application
 
-## Start Streamlit
+## Option 1: Use the Live Demo
+
+Open your browser and visit:
+
+**https://anshu908-blog-writing-agent.hf.space**
+
+---
+
+## Option 2: Run Locally
+
+Start Streamlit:
 
 ```bash
 streamlit run bwa_frontend.py
